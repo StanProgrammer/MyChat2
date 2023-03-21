@@ -6,7 +6,6 @@ const router = express.Router();
 const chatController = require('../controllers/chatController')
 const authorization = require('../middleware/auth');
 
-router.post('/sendFile/:groupId' , authorization.authentication , chatController.sendFile);
 
 router.post('/sendMessage/:groupId', authorization.authentication,  chatController.sendMessage);
 
@@ -22,4 +21,8 @@ router.post('/deleteUser/:groupId' , authorization.authentication ,  chatControl
 
 router.post('/removeAdmin/:groupId' , authorization.authentication ,  chatController.removeAdmin);
 
+const multer = require('multer');
+const upload = multer();
+
+router.post('/sendFile/:groupId' , authorization.authentication, upload.single('file'), chatController.sendFile);
 module.exports = router;

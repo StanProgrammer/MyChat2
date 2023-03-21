@@ -27,6 +27,7 @@
     ></script>
   </head>
   <body>
+
     <div class="group-container" id="container">
       <aside>
         <h3 class="bg-info-subtle text-center" id="username">Hey User !</h3>
@@ -104,9 +105,9 @@
         </ul>
         
         <footer class="formholder">
-          <form enctype="multipart/form-data" id="uploadFile" method="post">
+          <form id="uploadFile">
             <input type="file" name="file" id="sendFile">
-            <button type="submit">send file</button>
+            <button type="button" onclick="uploadFile()">send file</button>
           </form>
 
           <form id="chat-form">
