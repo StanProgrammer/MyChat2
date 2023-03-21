@@ -2,7 +2,7 @@ const Chat = require('../models/chatModel');
 const User = require('../models/userModel');
 const Group = require('../models/groupModel');
 const UserGroup = require('../models/usergroupModel');
-
+const S3service=require('../services/S3services')
 exports.sendMessage = async (req, res, next) => {
     try {
         console.log(req.body);
@@ -52,7 +52,7 @@ exports.getMessage = async (req, res, next) => {
             include : [
                 {model : User, attributes: ['name' , 'id']}
             ]
-        }  );
+        });
 
         
         console.table(JSON.parse(JSON.stringify(messages)));
@@ -97,6 +97,10 @@ exports.addUser = async (req, res, next) => {
         const user = await User.findOne({ where: { email: email } });
         if (!user) {
             return res.status(500).json({ success: false, message: `User doesn't exist !` });
+        }
+        const alreadyInGroup = await UserGroup.findOne({ where : {userId : user.id, groupId: groupId}});
+        if(alreadyInGroup){
+            return res.status(500).json({ success: false, message: `User is already in group !` });
         }
 
         const data = await UserGroup.create({
@@ -187,44 +191,40 @@ exports.deleteUser = async (req, res, next) => {
 
         const checkUser = await UserGroup.findOne({ where: { groupId: groupId, userId: req.user.id } });
         if (!checkUser) {
-            return res.status(500).json({ success: false, message: `You are no longer in group !` });
+            return res.status(400).json({ success: false, message: `You are no longer in group !` });
         }
 
-        //check whether user is admin or not.
-        if (checkUser.isAdmin == false) {
-            //if user try to delete ourself.
-
-            if (req.user.email == email) {
+        const allAdmins = await UserGroup.findAll({ where: { groupId: groupId, isAdmin: true } });
+        
+        //if user try to delete himself.
+        if (req.user.email == email && !checkUser.isAdmin) {
+            await checkUser.destroy();
+            return res.status(200).json({ success: true, message: `User has been deleted from group !` });
+        }
+        if (req.user.email == email) {
+            if(allAdmins.length>1){
                 await checkUser.destroy();
                 return res.status(200).json({ success: true, message: `User has been deleted from group !` });
+            }else{
+                return res.status(400).json({ success: false, message: `Make another user as an Admin !` });
             }
-
-            return res.status(500).json({ success: false, message: `Only admin can delete members from groups !` });
         }
 
+        //check whether user is not an admin.
+        if (checkUser.isAdmin == false) {
+            return res.status(400).json({ success: false, message: `Only admin can delete members from groups !` });
+        }
+        
         const user = await User.findOne({ where: { email: email } });
-
-        const data = await UserGroup.findAll({where : { groupId : groupId , isAdmin : true}});
-        if(data.length>1){
-
-        }
-        // console.log(user);
         const usergroup = await UserGroup.findOne({ where: { userId: user.id, groupId: groupId } });
-        // console.log(usergroup);
 
-        if (usergroup.isAdmin == false) {
+        if (usergroup) {
             usergroup.destroy();
             return res.status(200).json({ success: true, message: `User ${user.name} is deleted successfully !` });
-        } else if (req.user.email == email) {
-            return res.status(500).json({ success: false, message: `Admin have to remove admin himself before leaving group !` });
-        } else {
-            return res.status(500).json({ success: false, message: `first remove admin before deleting user: ${user.name} !` });
         }
-
-
     } catch (err) {
         console.log(err);
-        res.status(400).json({ success: false, message: `Something went wrong !` });
+        res.status(500).json({ success: false, message: `Something went wrong !` });
     }
 
 }
@@ -262,11 +262,34 @@ exports.removeAdmin = async (req, res, next) => {
 
 
 
-exports.sendFile = (req, res, next) => {
-    console.log(req.body);
-    console.log(req.params);
-    console.log(req.file);
-    const { groupId } = req.params;
 
-    res.status(200).json({ success: true });
+
+exports.sendFile = async (req, res, next) => {
+    try{
+        console.log(req.file);
+        const { groupId } = req.params;
+        if(!req.file){
+           return res.status(400).json({ success: false, message: `Please choose file !` });
+        }
+    
+        let type = (req.file.mimetype.split('/'))[1];
+        console.log('type', type)
+        const file = req.file.buffer;
+        const filename = `GroupChat/${new Date()}.${type}`;
+        console.log(`file ===>`, file );
+        console.log('filename ====>', filename);
+        const fileUrl = await S3service.uploadToS3(file,filename);
+        console.log('fileUrl =============>',fileUrl);
+    
+        let result = await req.user.createChat({
+            message: fileUrl,
+            groupId: groupId
+        })
+        const data = { message: result.message, createdAt: result.createdAt };
+    
+        res.status(200).json({ success: true, data });
+    }catch(err){
+        console.log(err);
+        res.status(400).json({ success: false, message: `Something went wrong !` });
+    }
 }
