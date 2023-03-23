@@ -13,17 +13,25 @@ let chatArray = [];
 let lastMessageId;
 
 let flag = true;
-//for each 5 sec getting all messages store it on local storage as well as on frontend.
-// setInterval(async () => {
-//     await dom();
-// }, 2000);
 
-//whenever page refresh sending last messageId of perticular group to backend and getting all messages with respective group.
+const socket = io('http://127.0.0.1:3000')
+
+        socket.on("connect", () => {
+            console.log(`connected with id:${socket.id}`)
+        })
+
+        socket.on("receive-message", async() => {
+            await dom();
+        })
+
 window.addEventListener('DOMContentLoaded', dom());
 
 async function dom(){
-    document.getElementById('groupname').innerText = groupName;
-    document.getElementById('username').innerText = `Hey! ${username.split(" ")[0]}`;
+    const arr=groupName.split(' ')
+    
+    document.getElementById('groupname').innerText = arr[0];
+   
+    document.getElementById('username').innerText = `Let's Chat ${username.split(" ")[0]}`;
 
     let message = JSON.parse(localStorage.getItem(`messages${groupId}`));
 
@@ -59,8 +67,7 @@ async function dom(){
 
     localStorage.setItem(`messages${groupId}`, localStorageMessages);
 
-    // console.log(`messages===>`, JSON.parse(localStorage.getItem(`messages${groupId}`)));
-
+    
     //display all messages on frontend.
     chatArray.forEach(ele => {
         // console.log(ele.message);
@@ -73,18 +80,21 @@ async function dom(){
     flag = false;
     if(backendArray.length){
         chat.scrollTo(0, chat.scrollHeight);
+
     }
+    window.scrollTo(0, document.body.scrollHeight);
+
 }
 
 
-//whenever sending messages in group.
+
 form.addEventListener('click', async (e) => {
     if (e.target.classList.contains('sendchat')) {
         try {
             e.preventDefault();
             const message = e.target.parentNode.message.value;
             const response = await axios.post(`${backendAPIs}/sendMessage/${groupId}`, { message: message }, { headers: { 'Authorization': token } });
-            console.log(response.data);
+            
             showMyMessageOnScreen(response.data.data);
             e.target.parentNode.message.value = null;
 
@@ -99,7 +109,7 @@ form.addEventListener('click', async (e) => {
     }
 })
 
-//to add user inside group by searching his email in input box.
+
 searchBoxForm.addEventListener('click', async (e) => {
     if (e.target.classList.contains('search-btn')) {
         try {
@@ -120,7 +130,7 @@ searchBoxForm.addEventListener('click', async (e) => {
     }
 })
 
-//function for my message will display on screen.
+
 function showMyMessageOnScreen(obj) {
     const timeForUser = time(obj.createdAt);
     const dateOfUser = date(obj.createdAt);
@@ -155,7 +165,7 @@ function showMyMessageOnScreen(obj) {
     }
 }
 
-//function for other's messages will display on screen.
+
 function showOtherMessgeOnScreen(obj) {
     const timeForUser = time(obj.createdAt);
     const dateOfUser = date(obj.createdAt);
@@ -192,7 +202,7 @@ function showOtherMessgeOnScreen(obj) {
     
 }
 
-//convert string to getting time in 11:06 PM formet.
+
 function time(string) {
     const time_object = new Date(string);
     return time_object.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });

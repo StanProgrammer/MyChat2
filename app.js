@@ -6,9 +6,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.json());
-app.use(cors({
-    origin: '*'
-}));
+// app.use(cors({
+//     origin: '*'
+// }));
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -44,6 +44,22 @@ Group.belongsToMany(User , {
 
 Group.hasMany(Chat);
 Chat.belongsTo(Group);
+
+const io=require('socket.io')(5000,{
+    cors:{
+        // origin:['http://127.0.0.1:3000']
+        // origin:['http://127.0.0.1:3000']
+        origin:'*'
+    }
+})
+
+io.on("connection",socket=>{
+    console.log(socket.id)
+    socket.on("send-message",message=>{
+        socket.broadcast.emit("receive-message",message)
+    })
+})
+
 
 sequelize
 .sync()

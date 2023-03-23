@@ -42,7 +42,6 @@ window.addEventListener('DOMContentLoaded', async() => {
 form.addEventListener('click' , async (e) => {
     if(e.target.classList.contains('group')){
         e.preventDefault();
-        console.log('group=======>');
 
         const group_name = e.target.parentNode.parentNode.group.value.trim();
 
