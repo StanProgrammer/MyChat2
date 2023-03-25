@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Group = require('../models/groupModel');
 const UserGroup = require('../models/usergroupModel');
 const S3service=require('../services/S3services')
+const { Sequelize, Op } = require("sequelize");
 exports.sendMessage = async (req, res, next) => {
     try {
         const { message } = req.body;
@@ -33,15 +34,11 @@ exports.sendMessage = async (req, res, next) => {
 
 
 
-const { Sequelize, Op } = require("sequelize");
 
 exports.getMessage = async (req, res, next) => {
     try {
         let msgId = req.query.lastMessageId;
         let { groupId } = req.params;
-        console.log(`msgId`, msgId);
-        console.log(`groupid ==> ${groupId}`);
-
         let messages = await Chat.findAll({
             attributes: ['id' , 'message' , 'createdAt'],
             where : {
@@ -166,7 +163,7 @@ exports.makeAdmin = async (req, res, next) => {
             return res.status(400).json({ success: false, message: `this user doesn't exist in database !` });
         }
 
-        // console.log(user);
+        
         const data = await UserGroup.update({
             isAdmin: true
         }, { where: { groupId: groupId, userId: user.id } });
