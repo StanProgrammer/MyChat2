@@ -14,15 +14,7 @@ let lastMessageId;
 
 let flag = true;
 
-const socket = io('http://127.0.0.1:5000')
 
-        socket.on("connect", () => {
-            console.log(`connected with id:${socket.id}`)
-        })
-
-        socket.on("receive-message", async() => {
-            await dom();
-        })
 
 window.addEventListener('DOMContentLoaded', dom());
 
@@ -42,9 +34,9 @@ async function dom(){
     }
 
     const response = await axios.get(`${backendAPIs}/getMessage/${groupId}?lastMessageId=${lastMessageId}`, { headers: { 'Authorization': token } });
-    // console.log(response.data);
+    
     const backendArray = response.data.arrayOfMessages;
-    // console.log(backendArray);
+    
     if(flag == false && backendArray.length==0){
         return ;
     }else{

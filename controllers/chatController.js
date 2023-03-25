@@ -11,7 +11,7 @@ exports.sendMessage = async (req, res, next) => {
 
         const isUserInGroup = await UserGroup.findOne({ where: { userId: req.user.id, groupId: groupId } });
         if (!isUserInGroup) {
-            return res.status(400).json({ success: false, message: 'You are no longer in group now !' });
+            return res.status(400).json({ success: false, message: 'Not Found !' });
         }
 
         if (!message) {

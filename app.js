@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -42,26 +41,25 @@ Group.belongsToMany(User , {
 Group.hasMany(Chat);
 Chat.belongsTo(Group);
 
-const io=require('socket.io')(5000,{
+app.use(cors({
+    origin:'*'
+    
+}))
+const server=require('http').createServer(app)
+const io=require('socket.io')(server,{
     cors:{
-        
         origin:'*'
     }
-})
-
-io.on("connection",socket=>{
-    console.log(socket.id)
-    socket.on("send-message",message=>{
-        socket.broadcast.emit("receive-message",message)
-    })
 })
 
 
 sequelize
 .sync()
 .then(() => {
-    console.log(`Hi`);
     app.listen(process.env.port);
 })
+
+
+
 
 
