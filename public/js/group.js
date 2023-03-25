@@ -4,7 +4,7 @@ const token = localStorage.getItem('token');
 const groups = document.getElementById('groups');
 const otherGroups = document.getElementById('otherGroups');
 
-//getting all groups on screen
+
 window.addEventListener('DOMContentLoaded', async() => {
     const response = await axios.get(`${backendAPIs}/getGroup`, {headers : {'Authorization' : token} });
     console.log(response.data);

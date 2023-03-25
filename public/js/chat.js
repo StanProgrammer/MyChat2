@@ -14,7 +14,7 @@ let lastMessageId;
 
 let flag = true;
 
-const socket = io('http://127.0.0.1:3000')
+const socket = io('http://127.0.0.1:5000')
 
         socket.on("connect", () => {
             console.log(`connected with id:${socket.id}`)
@@ -208,7 +208,7 @@ function time(string) {
     return time_object.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 }
 
-//convert string to getting date/Today/Yesterday.
+
 function date(string) {
     const today = new Date();
     const date_object = new Date(string);
@@ -226,7 +226,7 @@ function date(string) {
     return date_object.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-//burger button functionallity
+
 const allName = document.getElementById('group');
 
 const burgerButton = document.querySelector(".burger-button");
@@ -243,7 +243,7 @@ burgerButton.addEventListener("click", function() {
 let numOfUsers;
 async function openBox() {
     const users = await axios.get(`${backendAPIs}/getUsers/${groupId}`);
-    // console.log(users.data);
+    
     numOfUsers = users.data.userDetails.length;
 
     allName.innerHTML = `
@@ -261,7 +261,6 @@ async function openBox() {
 
 }
 
-//if user is an Admin
 function displayNameForAdmin(user) {
     if (user.isAdmin) {
         allName.innerHTML += `
@@ -376,10 +375,13 @@ async function uploadFile(){
 }
 
 
-//logout functionality
+
 function logout(){
     if(confirm('Are you sure ?')){
         localStorage.clear();
         return window.location.href = './login.html';
     }
 }
+setInterval(async () => {
+    await dom();
+}, 1000);

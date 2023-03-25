@@ -5,7 +5,6 @@ const UserGroup = require('../models/usergroupModel');
 const S3service=require('../services/S3services')
 exports.sendMessage = async (req, res, next) => {
     try {
-        console.log(req.body);
         const { message } = req.body;
         const { groupId } = req.params;
 
@@ -55,7 +54,7 @@ exports.getMessage = async (req, res, next) => {
         });
 
         
-        console.table(JSON.parse(JSON.stringify(messages)));
+        
         
         const arrayOfMessages = messages.map(ele => {
             if(ele.user.id == req.user.id){
@@ -63,7 +62,7 @@ exports.getMessage = async (req, res, next) => {
             }
             return { id : ele.id , message : ele.message , createdAt : ele.createdAt, name: ele.user.name};
         })
-        // console.table(arrayOfMessages);
+        
 
 
         res.status(200).json({ success: true, arrayOfMessages });
