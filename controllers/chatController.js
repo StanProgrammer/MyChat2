@@ -2,7 +2,7 @@ const Chat = require('../models/chatModel');
 const User = require('../models/userModel');
 const Group = require('../models/groupModel');
 const UserGroup = require('../models/usergroupModel');
-const S3service=require('../services/S3services')
+const S3service = require('../services/S3services')
 const { Sequelize, Op } = require("sequelize");
 exports.sendMessage = async (req, res, next) => {
     try {
@@ -40,26 +40,26 @@ exports.getMessage = async (req, res, next) => {
         let msgId = req.query.lastMessageId;
         let { groupId } = req.params;
         let messages = await Chat.findAll({
-            attributes: ['id' , 'message' , 'createdAt'],
-            where : {
-                groupId : groupId,
-                id : { [Op.gt]: msgId}
+            attributes: ['id', 'message', 'createdAt'],
+            where: {
+                groupId: groupId,
+                id: { [Op.gt]: msgId }
             },
-            include : [
-                {model : User, attributes: ['name' , 'id']}
+            include: [
+                { model: User, attributes: ['name', 'id'] }
             ]
         });
 
-        
-        
-        
+
+
+
         const arrayOfMessages = messages.map(ele => {
-            if(ele.user.id == req.user.id){
-                return { id : ele.id , message : ele.message , createdAt : ele.createdAt, name: ele.user.name, currentUser: 'same user'};
+            if (ele.user.id == req.user.id) {
+                return { id: ele.id, message: ele.message, createdAt: ele.createdAt, name: ele.user.name, currentUser: 'same user' };
             }
-            return { id : ele.id , message : ele.message , createdAt : ele.createdAt, name: ele.user.name};
+            return { id: ele.id, message: ele.message, createdAt: ele.createdAt, name: ele.user.name };
         })
-        
+
 
 
         res.status(200).json({ success: true, arrayOfMessages });
@@ -94,8 +94,8 @@ exports.addUser = async (req, res, next) => {
         if (!user) {
             return res.status(500).json({ success: false, message: `User doesn't exist !` });
         }
-        const alreadyInGroup = await UserGroup.findOne({ where : {userId : user.id, groupId: groupId}});
-        if(alreadyInGroup){
+        const alreadyInGroup = await UserGroup.findOne({ where: { userId: user.id, groupId: groupId } });
+        if (alreadyInGroup) {
             return res.status(500).json({ success: false, message: `User is already in group !` });
         }
 
@@ -163,7 +163,7 @@ exports.makeAdmin = async (req, res, next) => {
             return res.status(400).json({ success: false, message: `this user doesn't exist in database !` });
         }
 
-        
+
         const data = await UserGroup.update({
             isAdmin: true
         }, { where: { groupId: groupId, userId: user.id } });
@@ -191,17 +191,17 @@ exports.deleteUser = async (req, res, next) => {
         }
 
         const allAdmins = await UserGroup.findAll({ where: { groupId: groupId, isAdmin: true } });
-        
+
         //if user try to delete himself.
         if (req.user.email == email && !checkUser.isAdmin) {
             await checkUser.destroy();
             return res.status(200).json({ success: true, message: `User has been deleted from group !` });
         }
         if (req.user.email == email) {
-            if(allAdmins.length>1){
+            if (allAdmins.length > 1) {
                 await checkUser.destroy();
                 return res.status(200).json({ success: true, message: `User has been deleted from group !` });
-            }else{
+            } else {
                 return res.status(400).json({ success: false, message: `Make another user as an Admin !` });
             }
         }
@@ -210,7 +210,7 @@ exports.deleteUser = async (req, res, next) => {
         if (checkUser.isAdmin == false) {
             return res.status(400).json({ success: false, message: `Only admin can delete members from groups !` });
         }
-        
+
         const user = await User.findOne({ where: { email: email } });
         const usergroup = await UserGroup.findOne({ where: { userId: user.id, groupId: groupId } });
 
@@ -261,30 +261,30 @@ exports.removeAdmin = async (req, res, next) => {
 
 
 exports.sendFile = async (req, res, next) => {
-    try{
+    try {
         console.log(req.file);
         const { groupId } = req.params;
-        if(!req.file){
-           return res.status(400).json({ success: false, message: `Please choose file !` });
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: `Please choose file !` });
         }
-    
+
         let type = (req.file.mimetype.split('/'))[1];
         console.log('type', type)
         const file = req.file.buffer;
         const filename = `GroupChat/${new Date()}.${type}`;
-        console.log(`file ===>`, file );
+        console.log(`file ===>`, file);
         console.log('filename ====>', filename);
-        const fileUrl = await S3service.uploadToS3(file,filename);
-        console.log('fileUrl =============>',fileUrl);
-    
+        const fileUrl = await S3service.uploadToS3(file, filename);
+        console.log('fileUrl =============>', fileUrl);
+
         let result = await req.user.createChat({
             message: fileUrl,
             groupId: groupId
         })
         const data = { message: result.message, createdAt: result.createdAt };
-    
+
         res.status(200).json({ success: true, data });
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(400).json({ success: false, message: `Something went wrong !` });
     }
