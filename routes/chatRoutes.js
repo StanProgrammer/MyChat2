@@ -1,28 +1,25 @@
-
-const express = require('express');
-
-const router = express.Router();
-
+const express = require('express')
+const router = express.Router()
 const chatController = require('../controllers/chatController')
-const authorization = require('../middleware/auth');
+const auth = require('../middleware/authorization')
+// router.get('/home',chatController.homePage)
 
-
-router.post('/sendMessage/:groupId', authorization.authentication,  chatController.sendMessage);
-
-router.get('/getMessage/:groupId' , authorization.authentication,  chatController.getMessage);
-
-router.get('/getUsers/:groupId' ,  chatController.getUsers);
-
-router.post('/addUser/:groupId' , authorization.authentication ,  chatController.addUser);
-
-router.post('/makeAdmin/:groupId' , authorization.authentication ,  chatController.makeAdmin);
-
-router.post('/deleteUser/:groupId' , authorization.authentication ,  chatController.deleteUser);
-
-router.post('/removeAdmin/:groupId' , authorization.authentication ,  chatController.removeAdmin);
+router.post('/send/:groupId',auth.authorization,chatController.sendChat)
+router.get('/allChats/:groupId',auth.authorization,chatController.allChats)
+router.get('/allUsers/:groupId' ,  chatController.allUsers);
+router.post('/addUser/:groupId' , auth.authorization ,  chatController.addUser);
+router.post('/deleteUser/:groupId' , auth.authorization ,  chatController.deleteUser);
+router.post('/removeAdmin/:groupId' , auth.authorization ,  chatController.removeAdmin);
+router.post('/makeAdmin/:groupId' , auth.authorization ,  chatController.makeAdmin);
 
 const multer = require('multer');
 const upload = multer();
 
-router.post('/sendFile/:groupId' , authorization.authentication, upload.single('file'), chatController.sendFile);
+router.post('/sendFile/:groupId' , auth.authorization, upload.single('file'), chatController.sendFile);
 module.exports = router;
+
+// router.get('/allUsers',auth.authorization,chatController.allUsers)
+
+// router.get('/sendTo',chatController.sendtoChats)
+
+module.exports=router

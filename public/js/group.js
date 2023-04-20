@@ -1,5 +1,5 @@
 const form = document.getElementById('form');
-const backendAPIs = 'http://localhost:3000/group';
+const backendAPIs = 'http://localhost:3000';
 const token = localStorage.getItem('token');
 const groups = document.getElementById('groups');
 const otherGroups = document.getElementById('otherGroups');
@@ -69,8 +69,10 @@ groups.addEventListener('click' , async (e) => {
         const name = e.target.innerText.split("\n")[0];
         
         localStorage.setItem('groupId', id);
-        localStorage.setItem('groupName', name);
-        return window.location.href = './chat.html'
+        const name1=name.split(' ')
+
+        localStorage.setItem('groupName', name1[0]);
+        return window.location.href = 'http://localhost:3000/views/index.html'
     }
 
     if(e.target.classList.contains('delete')){

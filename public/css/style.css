@@ -1,122 +1,102 @@
-
-body {
-    color: #fff;
-    background: #63738a;
-    font-family: 'Roboto', sans-serif;
+body{
+    height: 100vh;
+    background-image: linear-gradient(rgb(255, 255, 255), rgb(109, 39, 239));
 }
-.form-control{
-    height: 40px;
-    box-shadow: none;
-    color: #969fa4;
-}
-.form-control:focus{
-    border-color: #5cb85c;
-}
-.form-control, .btn{        
-    border-radius: 3px;
-}
-.signup-form{
-    width: 400px;
-    margin: 0 auto;
-    padding: 30px 0;
-}
-.signup-form h2{
-    color: #636363;
-    margin: 0 0 15px;
-    position: relative;
-    text-align: center;
-}
-.signup-form h2:before, .signup-form h2:after{
-    content: "";
-    height: 2px;
-    width: 30%;
-    background: #d4d4d4;
-    position: absolute;
-    top: 50%;
-    z-index: 2;
-}	
-.signup-form h2:before{
+.sidebar{
+    background-color: #fff;
+    position: fixed;
+    top: 0;
     left: 0;
+    width: 250px;
+    height: 100%;
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
+    }
+
+.logo{
+    display: block;
+    margin: auto;
+    width: 50px;
+    height: 50px;
 }
-.signup-form h2:after{
-    right: 0;
-}
-.signup-form .hint-text{
-    color: #999;
-    margin-bottom: 30px;
+h1{
+    margin-top: 12px;
+    font-size: 30px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     text-align: center;
 }
-.signup-form form{
-    color: #999;
-    border-radius: 3px;
-    margin-bottom: 15px;
-    background: #f2f3f7;
-    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-    padding: 30px;
+.container{
+    max-width: 1100px;
+    border: 2px solid black;
+    border-radius: 13px;
+    margin: auto;
+    height: 80vh;
+    padding: 33px;
+    overflow-y: auto;
+    margin-bottom: 23px;
+    margin-left: 250px; /* adjust this value to match the width of your sidebar */
 }
-.signup-form .form-group{
-    margin-bottom: 20px;
-}
-.signup-form input[type="checkbox"]{
-    margin-top: 3px;
-}
-.signup-form .btn{        
-    font-size: 16px;
-    font-weight: bold;		
-    min-width: 140px;
-    outline: none !important;
-}
-.signup-form .row div:first-child{
-    padding-right: 10px;
-}
-.signup-form .row div:last-child{
-    padding-left: 10px;
-}    	
-.signup-form a{
-    color: #fff;
-    text-decoration: underline;
-}
-.signup-form a:hover{
-    text-decoration: none;
-}
-.signup-form form a{
-    color: #5cb85c;
-    text-decoration: none;
-}	
-.signup-form form a:hover{
-    text-decoration: underline;
-}
-.error {
-    color: red;
-    background-color: white;
-    text-align: center;
-    font-size: large;
+.logo, .title {
+    display: inline-block;
+  }
+  
+  .logo {
+    width: 50px; /* adjust the width as needed */
+    height: 50px; /* adjust the height as needed */
+    margin-right: 10px; /* adjust the margin as needed */
   }
 
+.message{
+    background-color: rgb(211, 204, 204);
+    width: 24%;
+    padding: 10px;
+    margin: 17px 12px;
+    border: 2px solid black;
+    border-radius: 10px;
+}
 
+.message image{
+    background-color: rgb(211, 204, 204);
+    width: 500%;
+    height: 500%;
+    padding: 10px;
+    margin: 17px 12px;
+    border: 2px solid black;
+    border-radius: 10px;
+}
+.left{
+    float: left;
+    clear:both;
+}
 
-.group-name{
+.right{
+    float: right;
+    clear:both;
+}
+
+#send-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 1085px;
+    margin: auto;
     text-align: center;
-    font-size: medium;
-    color: #636363;
-    font-weight: 600;
-    margin-bottom: 10px;
+    margin-left: 270px;
+}
+#messageInp{
+    width: 70%;
+    border: 2px solid black;
+    border-radius: 6px;
+    height: 34px;
+    font-size: 22px;
+    margin-right: 10px; /* added margin to separate from the button */
 }
 
-.centered-form__box {
-    box-shadow: 0 0 17px 1px #585a61;
-    background: #f0edef;
-    padding: 25px;
-    width: 400px;
-}
-
-.msg-chat {
-    margin-bottom: 20px;
-}
-
-
-.logout-div {
-    position: absolute;
-    right: 0px;
-    /* top: 40px; */
-  }
+/* .btn{
+    background-color: blue;
+    margin: 0 5px;
+    width: 9%;
+    cursor: pointer;
+    border: 2px solid black;
+    border-radius: 6px;
+    height: 34px;
+} */

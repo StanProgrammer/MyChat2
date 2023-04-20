@@ -1,182 +1,169 @@
-const Chat = require('../models/chatModel');
-const User = require('../models/userModel');
-const Group = require('../models/groupModel');
-const UserGroup = require('../models/usergroupModel');
-const S3service = require('../services/S3services')
-const { Sequelize, Op } = require("sequelize");
-exports.sendMessage = async (req, res, next) => {
-    try {
-        const { message } = req.body;
-        const { groupId } = req.params;
+const path = require('path')
+const rootDir = path.dirname(require.main.filename);
+const sequelize = require('../util/database');
+const Chat = require('../models/chats')
+const jwt = require('jsonwebtoken')
+const User = require('../models/users')
+const {Op} = require('sequelize');
+const UserGroup=require('../models/usergroupModel')
+const S3service=require('../services/S3services')
+const env=require('dotenv');
+const { log } = require('console');
+env.config()
+const SECRET_KEY=process.env.SECRET_KEY
+exports.homePage = (req, res, next) => {
+    res.sendFile(path.join(rootDir, 'public', 'html', 'chat.html'))
+}
 
+exports.sendChat=async(req,res,next)=>{
+    const sequelizeTransaction = await sequelize.transaction(); 
+    try {
+        const { groupId } = req.params;
+        const token = req.header('Authorization');
+        const user = jwt.verify(token, SECRET_KEY);
+        const id=user.id
+        const name=user.name
         const isUserInGroup = await UserGroup.findOne({ where: { userId: req.user.id, groupId: groupId } });
         if (!isUserInGroup) {
             return res.status(400).json({ success: false, message: 'Not Found !' });
         }
-
-        if (!message) {
-            return res.status(400).json({ success: false, message: 'Nothing entered !' });
-        }
-
-        let result = await req.user.createChat({
-            message: message,
+        const data=await Chat.create({
+            chat: req.body.chat,
+            userId: id,
+            userName:name,
             groupId: groupId
-        })
+        },
 
-        const data = { message: result.message, createdAt: result.createdAt };
-
-        return res.status(200).json({ success: true, data });
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({ success: false, message: 'Something went wrong !' })
+        {transaction: sequelizeTransaction})
+        await sequelizeTransaction.commit();
+        res.status(201).json({message:'Done'})
+        
+    } catch (error) {
+        console.log(error);
+        await sequelizeTransaction.rollback();
+        res.status(500).json({error:error})
     }
 }
 
 
-
-
-exports.getMessage = async (req, res, next) => {
+exports.allChats=async(req,res,next)=>{
     try {
-        let msgId = req.query.lastMessageId;
+      // console.log(lastMessageId);
+        const lastMessageId = req.query.lastId || 0;
         let { groupId } = req.params;
-        let messages = await Chat.findAll({
-            attributes: ['id', 'message', 'createdAt'],
-            where: {
-                groupId: groupId,
-                id: { [Op.gt]: msgId }
+        console.log(lastMessageId);
+        const chats = await Chat.findAll({
+          raw:true,
+          where:{
+            id:{
+              [Op.gt]: lastMessageId
             },
-            include: [
-                { model: User, attributes: ['name', 'id'] }
-            ]
+            groupId: groupId
+          },
         });
-
-
-
-
-        const arrayOfMessages = messages.map(ele => {
-            if (ele.user.id == req.user.id) {
-                return { id: ele.id, message: ele.message, createdAt: ele.createdAt, name: ele.user.name, currentUser: 'same user' };
-            }
-            return { id: ele.id, message: ele.message, createdAt: ele.createdAt, name: ele.user.name };
-        })
-
-
-
-        res.status(200).json({ success: true, arrayOfMessages });
-    } catch (err) {
+        // let a=[]
+        // let ids=chats.map((elements)=>{
+        //   return elements.userId
+        // })
+        // console.log(chats);
+        // let name=names.map((ele)=>{
+        //   return ele.name
+        // })
+        // console.log(name);
+       
+        return res.status(200).json({ chats });
+      } catch (err) {
         console.log(err);
-        res.status(500).json({ success: false, message: `Something went wrong` });
-    }
+        return res.status(500).json({ message: "Something wrong", Error: err });
+      }
+    };
+// exports.sendtoChats=async(req,res,send)=>{
+//     try {
+        
+//         const id=req.query.id
+//         const data=await Chat.findAll({
+//             limit: 10,
+//             raw: true,
+//             where: {
+//               userId: id
+//             },
+//             attributes: ['userId','chat','createdAt'], 
+//             order: [ [ 'createdAt', 'DESC' ]]
+//           });
+//         res.status(201).json(data)
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
+
+exports.allUsers=async (req,res,next)=>{
+  const { groupId } = req.params;
+
+  try {
+      const data = await UserGroup.findAll({ where: { groupId: groupId } });
+      const users = data.map(element => {
+          return { id: element.userId, isAdmin: element.isAdmin };
+      });
+      const userDetails = [];
+      let adminEmail = [];
+
+      for (let i = 0; i < users.length; i++) {
+          const user = await User.findOne({ where: { id: users[i].id } });
+          userDetails.push({ name: user.name, isAdmin: users[i].isAdmin, email: user.email });
+          if (users[i].isAdmin) {
+              adminEmail.push(user.email);
+          }
+      }
+
+      res.status(200).json({ success: true, userDetails, adminEmail });
+  } catch (err) {
+      console.log(err);
+      res.status(500).json({ success: false, message: 'Something went wrong !' })
+  }
 }
-
-
 
 exports.addUser = async (req, res, next) => {
-    try {
-        const { groupId } = req.params;
-        const { email } = req.body;
+  try {
+      const { groupId } = req.params;
+      const { email } = req.body;
+      const token = req.header('Authorization');
+      const user1 = jwt.verify(token, SECRET_KEY);
+      const id=user1.id
+      if (!email) {
+          return res.status(500).json({ success: false, message: `Bad request !` });
+      }
+      const checkUserIsAdmin = await UserGroup.findOne({ where: { userId: id, groupId: groupId } });
+      console.log(checkUserIsAdmin);
+      if (!checkUserIsAdmin.isAdmin) {
+          return res.status(500).json({ success: false, message: `Only admin can add users !` });
+      }
 
-        if (!email) {
-            return res.status(500).json({ success: false, message: `Bad request !` });
-        }
+      if (req.user.email == email) {
+          return res.status(500).json({ success: false, message: `Admin is already in group !` });
+      }
 
-        const checkUserIsAdmin = await UserGroup.findOne({ where: { userId: req.user.id, groupId: groupId } });
-        if (!checkUserIsAdmin.isAdmin) {
-            return res.status(500).json({ success: false, message: `Only admin can add users !` });
-        }
+      const user = await User.findOne({ where: { email: email } });
+      if (!user) {
+          return res.status(500).json({ success: false, message: `User doesn't exist !` });
+      }
+      const alreadyInGroup = await UserGroup.findOne({ where: { userId: user.id, groupId: groupId } });
+      if (alreadyInGroup) {
+          return res.status(500).json({ success: false, message: `User is already in group !` });
+      }
 
-        if (req.user.email == email) {
-            return res.status(500).json({ success: false, message: `Admin is already in group !` });
-        }
+      const data = await UserGroup.create({
+          userId: user.id,
+          groupId: groupId,
+          isAdmin: false
+      })
 
-        const user = await User.findOne({ where: { email: email } });
-        if (!user) {
-            return res.status(500).json({ success: false, message: `User doesn't exist !` });
-        }
-        const alreadyInGroup = await UserGroup.findOne({ where: { userId: user.id, groupId: groupId } });
-        if (alreadyInGroup) {
-            return res.status(500).json({ success: false, message: `User is already in group !` });
-        }
-
-        const data = await UserGroup.create({
-            userId: user.id,
-            groupId: groupId,
-            isAdmin: false
-        })
-
-        res.status(200).json({ success: true, message: 'User successfully added !', data });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ success: false, message: `Something went wrong !` });
-    }
-
+      res.status(200).json({ success: true, message: 'User successfully added !', data });
+  } catch (err) {
+      console.log(err);
+      res.status(500).json({ success: false, message: `Something went wrong !` });
+  }
 }
-
-
-
-
-exports.getUsers = async (req, res, next) => {
-    const { groupId } = req.params;
-
-    try {
-        const data = await UserGroup.findAll({ where: { groupId: groupId } });
-        const users = data.map(element => {
-            return { id: element.userId, isAdmin: element.isAdmin };
-        });
-        const userDetails = [];
-        let adminEmail = [];
-
-        for (let i = 0; i < users.length; i++) {
-            const user = await User.findOne({ where: { id: users[i].id } });
-            userDetails.push({ name: user.name, isAdmin: users[i].isAdmin, email: user.email });
-            if (users[i].isAdmin) {
-                adminEmail.push(user.email);
-            }
-        }
-
-        res.status(200).json({ success: true, userDetails, adminEmail });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ success: false, message: 'Something went wrong !' })
-    }
-}
-
-
-exports.makeAdmin = async (req, res, next) => {
-    console.log(req.body);
-    const { email } = req.body;
-    const { groupId } = req.params;
-
-    if (!email) {
-        return res.status(400).json({ success: false, message: 'bad request !' });
-    }
-
-    try {
-        const checkUserIsAdmin = await UserGroup.findOne({ where: { groupId: groupId, userId: req.user.id } });
-        if (checkUserIsAdmin.isAdmin == false) {
-            return res.status(400).json({ success: false, message: `Only Admin have this permission !` });
-        }
-
-        const user = await User.findOne({ where: { email: email } });
-        if (!user) {
-            return res.status(400).json({ success: false, message: `this user doesn't exist in database !` });
-        }
-
-
-        const data = await UserGroup.update({
-            isAdmin: true
-        }, { where: { groupId: groupId, userId: user.id } });
-
-
-        res.status(200).json({ success: true, message: `Now ${user.name} is also Admin !` });
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({ success: false, message: 'Something went wrong !' });
-    }
-}
-
-
 
 exports.deleteUser = async (req, res, next) => {
 
@@ -222,10 +209,7 @@ exports.deleteUser = async (req, res, next) => {
         console.log(err);
         res.status(500).json({ success: false, message: `Something went wrong !` });
     }
-
 }
-
-
 exports.removeAdmin = async (req, res, next) => {
     console.log(req.body, req.params);
     const { email } = req.body;
@@ -256,14 +240,48 @@ exports.removeAdmin = async (req, res, next) => {
 
 }
 
+exports.makeAdmin = async (req, res, next) => {
+    console.log(req.body);
+    const { email } = req.body;
+    const { groupId } = req.params;
+
+    if (!email) {
+        return res.status(400).json({ success: false, message: 'bad request !' });
+    }
+
+    try {
+        const checkUserIsAdmin = await UserGroup.findOne({ where: { groupId: groupId, userId: req.user.id } });
+        if (checkUserIsAdmin.isAdmin == false) {
+            return res.status(400).json({ success: false, message: `Only Admin have this permission !` });
+        }
+
+        const user = await User.findOne({ where: { email: email } });
+        if (!user) {
+            return res.status(400).json({ success: false, message: `this user doesn't exist in database !` });
+        }
 
 
+        const data = await UserGroup.update({
+            isAdmin: true
+        }, { where: { groupId: groupId, userId: user.id } });
+
+
+        res.status(200).json({ success: true, message: `Now ${user.name} is also Admin !` });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, message: 'Something went wrong !' });
+    }
+}
 
 
 exports.sendFile = async (req, res, next) => {
     try {
         console.log(req.file);
         const { groupId } = req.params;
+        const token = req.header('Authorization');
+        const user = jwt.verify(token, SECRET_KEY);
+        const id=user.id
+        const name=user.name
         if (!req.file) {
             return res.status(400).json({ success: false, message: `Please choose file !` });
         }
@@ -276,12 +294,19 @@ exports.sendFile = async (req, res, next) => {
         console.log('filename ====>', filename);
         const fileUrl = await S3service.uploadToS3(file, filename);
         console.log('fileUrl =============>', fileUrl);
-
-        let result = await req.user.createChat({
-            message: fileUrl,
+        
+        const result=await Chat.create({
+            chat: fileUrl,
+            userId: id,
+            userName:name,
             groupId: groupId
         })
-        const data = { message: result.message, createdAt: result.createdAt };
+        // let result = await req.user.createChat({
+        //     message: fileUrl,
+        //     groupId: groupId
+        // })
+        console.log('done');
+        const data = { message: result.chat, createdAt: result.createdAt };
 
         res.status(200).json({ success: true, data });
     } catch (err) {
@@ -289,3 +314,4 @@ exports.sendFile = async (req, res, next) => {
         res.status(400).json({ success: false, message: `Something went wrong !` });
     }
 }
+

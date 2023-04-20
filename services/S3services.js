@@ -9,7 +9,7 @@ async function uploadToS3(data, filename){
     });
     // console.log(s3bucket);
     var params = {
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: process.env.BUCKET_KEY,
         Key: filename,
         Body: data,
         ACL: 'public-read'
