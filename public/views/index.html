@@ -22,10 +22,35 @@
   .send {
     clear: both;
   }
+  .logout {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  font-size: 16px;
+}
+
+.logout a {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 25px;
+  background-color: #FF6347;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  
+}
+
+.logout a:hover {
+  background-color: #FF5733;
+}
+
   </style>
   
   
 <body>
+  <div class="logout">
+    <a href="login.html" onclick="logout()">Logout</a>
+  </div>
   <nav>
     <center>
     <img class="logo" src="../others/chat.png" alt="">

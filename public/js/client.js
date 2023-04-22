@@ -47,19 +47,64 @@ const append = (message, position)=>{
 
 const addChats = (message,userId,userName, position)=>{
     const messageElement = document.createElement('div');
+    
+    const pattern = /^(ftp|http|https):\/\/[^ "]+$/;
 if(userId==id){
     // console.log(1)
+    if (pattern.test(message) === true) {
+        const imageContainer = document.createElement('div');
+        const imageElement = document.createElement('img');
+        imageElement.setAttribute('src', message);
+        imageElement.setAttribute('alt', 'Image');
+        imageElement.setAttribute('width', '300');
+        imageElement.setAttribute('height', '300');
+        imageContainer.appendChild(imageElement);
+        imageContainer.classList.add('image-container');
+        messageElement.appendChild(imageContainer);
+        // messageElement.classList.add('message');
+        messageElement.classList.add('right');
+    }
+    // if(pattern.test(message)==true){
+    //     console.log(1);
+    //     messageElement.innerHTML = `<img src="${message}" alt="Image" width="300" height="300"/>`;
+    //     messageElement.classList.add('message');
+    // //     messageElement.classList.add(position);
+    //     messageElement.classList.add('right');
+    // }
+    else{
     messageElement.innerText = `${userName}:${message}`;
     messageElement.classList.add('message');
 //     messageElement.classList.add(position);
     messageElement.classList.add('right');
+    }
 }
 else{
-    // console.log(userName);
-    messageElement.innerText = `${userName}:${message}`;
+    // if(pattern.test(message)==true){
+    //     messageElement.innerHTML = `<img src="${message}" alt="Image" width="500" height="300"/>`;
+    //     messageElement.classList.add('message');
+    //     // messageElement.classList.add(position);
+    //     messageElement.classList.add('left');
+    // }
+    if (pattern.test(message) === true) {
+        const imageContainer = document.createElement('div');
+        const imageElement = document.createElement('img');
+        imageElement.setAttribute('src', message);
+        imageElement.setAttribute('alt', 'Image');
+        imageElement.setAttribute('width', '300');
+        imageElement.setAttribute('height', '300');
+        imageContainer.appendChild(imageElement);
+        imageContainer.classList.add('image-container');
+        messageElement.appendChild(imageContainer);
+        // messageElement.classList.add('message');
+        messageElement.classList.add('right');
+    }
+    else{
+        messageElement.innerText = `${userName}:${message}`;
     messageElement.classList.add('message');
     // messageElement.classList.add(position);
     messageElement.classList.add('left');
+    }
+    
 }
 messageContainer.append(messageElement);
 // if(position =='left'){ 
@@ -296,4 +341,11 @@ async function uploadFile(){
         }
     }
     
+}
+
+function logout(){
+    if(confirm('Are you sure ?')){
+        localStorage.clear();
+        return window.location.href = './login.html';
+    }
 }

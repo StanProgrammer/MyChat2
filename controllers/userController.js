@@ -31,7 +31,6 @@ exports.createUser = async (req, res, next) => {
             const hashPassword = await bcrypt.hash(password, saltrounds)
             const result = await User.create({ name: name, email: email, phone: phone, password: hashPassword })
             res.status(201).json({ message: 'Successfully Created'})
-            res.redirect('/')
         } else {
             res.status(400).send('User Already Exists')
     }
